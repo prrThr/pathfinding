@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 
-public class Main extends JFrame
+public class 		Main extends JFrame
 {
 
    private GamePanel gp;

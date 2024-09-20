@@ -175,7 +175,7 @@ public GamePanel()
 					System.out.println(""+my+" "+mx);
 
 					buscaAEstrela(mx,my);
-
+					//buscaEmLArgura(mx,my);
 
 
 
@@ -200,11 +200,16 @@ public GamePanel()
 			inicial.f = inicial.g + inicial.h;
 
 			PriorityQueue<Node> listaDeNodos = new PriorityQueue<>(Comparator.comparingInt(n -> (int) n.f));
-			HashSet<Integer> nodosVisitados = new HashSet<>();
+			//HashSet<Integer> nodosVisitados = new HashSet<>();
+
+			synchronized (nodosVisitados) {
+				nodosVisitados.clear();
+			}
 
 			listaDeNodos.add(inicial);
-			nodosVisitados.add(inicial.x + inicial.y * mapa.Largura);
-
+			synchronized (nodosVisitados) {
+				nodosVisitados.add(inicial.x + inicial.y * mapa.Largura);
+			}
 			boolean achou = false;
 			Node atual = null;
 			int nodosExplorados = 0; // Contador de nós explorados
@@ -234,7 +239,9 @@ public GamePanel()
 							t.f = t.g + t.h;
 
 							listaDeNodos.add(t);
-							nodosVisitados.add(t.x + t.y * mapa.Largura);
+							synchronized (nodosVisitados) {
+								nodosVisitados.add(t.x + t.y * mapa.Largura);
+							}
 						}
 					}
 				}
@@ -272,6 +279,79 @@ public GamePanel()
 			return Math.abs(x1 - x2) + Math.abs(y1 - y2);
 		}
 
+		public void buscaEmLArgura(int mx,int my) {
+			int bhx = (int)(meuHeroi.X/16);
+			int bhy = (int)(meuHeroi.Y/16);
+
+			Node inicial = new Node(bhx, bhy, null);
+
+			LinkedList<Node> listaDeNodos = new LinkedList<>();
+			//LinkedList<Node> listaDeNodosVisitados = new LinkedList<>();
+			synchronized (nodosVisitados) {
+				nodosVisitados.clear();
+			}
+
+
+			listaDeNodos.add(inicial);
+			synchronized (nodosVisitados) {
+				nodosVisitados.add(inicial.x+inicial.y*mapa.Largura);
+			}
+
+			boolean achow = false;
+
+			do {
+				Node atual = listaDeNodos.remove();
+				Node filhos[] = new Node[4];
+				filhos[0] = new Node(atual.x+1, atual.y, atual);
+				filhos[1] = new Node(atual.x-1, atual.y, atual);
+				filhos[2] = new Node(atual.x, atual.y+1, atual);
+				filhos[3] = new Node(atual.x, atual.y-1, atual);
+
+				for (int i = 0; i < filhos.length; i++) {
+					Node t = filhos[i];
+					if(t.x>=0&&t.y>=0&&t.x<mapa.Largura&&t.y<mapa.Altura&&mapa.mapa[t.y][t.x]==0) {
+						boolean jaVisitado = false;
+						if(nodosVisitados.contains(t.x+t.y*mapa.Largura)) {
+							jaVisitado = true;
+						}
+
+						if(jaVisitado==false) {
+							listaDeNodos.add(t);
+							synchronized (nodosVisitados) {
+								nodosVisitados.add(t.x+t.y*mapa.Largura);
+							}
+							if(t.x==mx&&t.y==my) {
+								achow = true;
+								break;
+							}
+						}
+					}
+				}
+
+			}while(achow==false);
+			System.out.println("achou "+listaDeNodos.size()+" ja visitados "+nodosVisitados.size());
+
+			Node nfinal = listaDeNodos.removeLast();
+			LinkedList<Node> pathlist = new LinkedList<>();
+			pathlist.add(nfinal);
+			Node atual = nfinal;
+			while(atual.pai!=null) {
+				pathlist.addFirst(atual.pai);
+				atual = atual.pai;
+			}
+
+			caminho = new int[pathlist.size()*2];
+			int pos = 0;
+			for (Iterator iterator = pathlist.iterator(); iterator.hasNext();) {
+				Node node = (Node) iterator.next();
+				caminho[pos] = node.x;
+				caminho[pos+1] = node.y;
+				pos+=2;
+			}
+
+			meuHeroi.X = nfinal.x*16+10;
+			meuHeroi.Y = nfinal.y*16+10;
+		}
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
