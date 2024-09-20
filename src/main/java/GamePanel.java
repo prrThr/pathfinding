@@ -89,19 +89,19 @@ public class GamePanel extends JPanel implements Runnable {
 
                 if (keyCode == KeyEvent.VK_LEFT) {
                     LEFT = true;
-                    translateX += 20;
+                    translateX += 200;
                 }
                 if (keyCode == KeyEvent.VK_RIGHT) {
                     RIGHT = true;
-                    translateX -= 20;
+                    translateX -= 200;
                 }
                 if (keyCode == KeyEvent.VK_UP) {
                     UP = true;
-                    translateY += 20;
+                    translateY += 200;
                 }
                 if (keyCode == KeyEvent.VK_DOWN) {
                     DOWN = true;
-                    translateY -= 20;
+                    translateY -= 200;
                 }
 
                 System.out.println(translateX + " " + translateY);
@@ -503,35 +503,44 @@ public class GamePanel extends JPanel implements Runnable {
         PriorityQueue<GNodo> filaAberta = new PriorityQueue<>();
         HashSet<GNodo> filaFechada = new HashSet<>();
         HashMap<GNodo, GNodo> cameFrom = new HashMap<>();
-        HashMap<GNodo, Double> gScore = new HashMap<>();
-        HashMap<GNodo, Double> fScore = new HashMap<>();
 
-        // Inicializar pontuações
-        gScore.put(inicio, 0.0);
-        fScore.put(inicio, inicio.distancia(fim));
+        // Inicializar o nodo inicial
+        inicio.g = 0;  // Custo real do nodo inicial é zero
+        inicio.h = inicio.distancia(fim);  // Heurística é a distância até o nodo final
+        inicio.f = inicio.g + inicio.h;  // Custo total é g + h
         filaAberta.add(inicio);
 
         while (!filaAberta.isEmpty()) {
-            GNodo atual = filaAberta.poll();
+            GNodo atual = filaAberta.poll(); // Nodo com menor f é retirado da fila
 
+            // Se o nodo atual é o destino, o caminho foi encontrado
             if (atual.equals(fim)) {
-                // Caminho encontrado
                 return reconstruirCaminho(cameFrom, atual);
             }
 
-            filaFechada.add(atual);
+            filaFechada.add(atual); // Adiciona o nodo à fila fechada
 
+            // Para cada aresta do nodo atual
             for (Aresta aresta : atual.getArestas()) {
                 GNodo vizinho = aresta.obterOutroNodo(atual);
-                if (filaFechada.contains(vizinho)) continue;
 
-                double tentativo_gScore = gScore.get(atual) + aresta.getCusto();
+                // Se o vizinho já foi explorado, pule
+                if (filaFechada.contains(vizinho)) {
+                    continue;
+                }
 
-                if (!gScore.containsKey(vizinho) || tentativo_gScore < gScore.get(vizinho)) {
+                // Custo do caminho até o vizinho passando pelo atual
+                double tentativo_gScore = atual.g + aresta.getCusto();
+
+                // Se o vizinho não está na fila aberta ou encontramos um caminho mais curto até ele
+                if (!filaAberta.contains(vizinho) || tentativo_gScore < vizinho.g) {
+                    // Atualiza o caminho
                     cameFrom.put(vizinho, atual);
-                    gScore.put(vizinho, tentativo_gScore);
-                    fScore.put(vizinho, gScore.get(vizinho) + vizinho.distancia(fim));
+                    vizinho.g = tentativo_gScore;
+                    vizinho.h = vizinho.distancia(fim); // Calcula a heurística
+                    vizinho.f = vizinho.g + vizinho.h;  // Atualiza f
 
+                    // Se o vizinho não está na fila aberta, adiciona
                     if (!filaAberta.contains(vizinho)) {
                         filaAberta.add(vizinho);
                     }
@@ -542,6 +551,7 @@ public class GamePanel extends JPanel implements Runnable {
         // Caso não encontre caminho
         return null;
     }
+
 
 
     public ArrayList<GNodo> reconstruirCaminho(HashMap<GNodo, GNodo> cameFrom, GNodo atual) {

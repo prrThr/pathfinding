@@ -7,13 +7,11 @@ public class GNodo implements Comparable<GNodo>{
 
 	ArrayList<Aresta> listaArestas = new ArrayList<>();
 
-	// Variáveis para o A*
 	double g = Double.MAX_VALUE; // Custo real do nodo
 	double h = 0;                // Heurística (estimativa) do nodo até o destino
 	double f = Double.MAX_VALUE;  // Custo total (f = g + h)
 	GNodo pai = null;             // Para traçar o caminho de volta ao final
 
-	// Construtor
 	public GNodo() {}
 
 	// Função para calcular a distância (heurística) entre dois nodos
@@ -28,7 +26,6 @@ public class GNodo implements Comparable<GNodo>{
 		return listaArestas;
 	}
 
-	// Implementação do método compareTo
 	@Override
 	public int compareTo(GNodo outroNodo) {
 		// Compara com base no custo total (f)
